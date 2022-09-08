@@ -1,10 +1,16 @@
+const dotenv = require("dotenv");
+dotenv.config({ path: "./.env" });
+
 const express = require("express");
+const connectDb = require("./connect/db");
+const { Server } = require("socket.io");
+const storedata = require("./utils/sendMessage");
 const app = express();
 const http = require("http");
 const cors = require("cors");
-const { Server } = require("socket.io");
 app.use(cors());
 
+connectDb();
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -20,11 +26,14 @@ io.on("connection", (socket) => {
   // join room
   socket.on("join_room", (data) => {
     socket.join(data);
+
     console.log(`User room ID ${socket.id} joined room ${data}`);
   });
 
   // send message
-  socket.on("send_message", (data) => {
+  socket.on("send_message", async (data) => {
+    await storedata(data);
+
     // database
     // get
     console.log("data=> socket");
